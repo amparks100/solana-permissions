@@ -2,43 +2,37 @@ use crate::{util::Serdes};
 use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub enum HAMTInstruction {
+pub enum PermissionInstruction {
     InitHAMT,
     SetValue,
 }
-impl Serdes for HAMTInstruction {}
+impl Serdes for PermissionInstruction {}
 
-/// Initializes a new HAMT with a state account and root node.
+/// Initializes a new Permission with a state account.
 ///
 /// Accounts expected:
 ///
-/// 0. `[signer]` The account of the person initializing the escrow
-/// 1. `[writable]` Account to hold HAMT state data (33 bytes)
+/// 0. `[signer]` The account of the person who needs permissions
+/// 1. `[writable]` Account to hold Permission state data (33 bytes)
 /// 2. `[]` The rent sysvar
-/// 3. `[writable]` Account to hold the root node's data (1152 bytes)
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub struct InitHAMT { 
-    kind: HAMTInstruction
+pub struct InitPermission { 
+    kind: PermissionInstruction
 }
 
-impl Serdes for InitHAMT {}
+impl Serdes for InitPermission {}
 
-/// Sets a value in the HAMT
+/// Updates a value in the Permission state
 ///
 /// Accounts expected:
 ///
 /// 0. `[signer]` The account of the person initializing the escrow
-/// 1. `[]` HAMT State account
-/// 2-(n-1). `[]` All HAMT nodes where key maps to a link.
-/// n. `[writable]` The first node that isn't a link for the key slot 
-///     where data will be written if there is no collision or new link.
-///     will be created if there is.
-/// (n+1)-(n+m). Newly created nodes for collisions.
+/// 1. `[]` Permission State account
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub struct SetValue {
-    pub kind: HAMTInstruction,
-    pub key: String,
-    pub value: u64,
+pub struct UpdatePermission {
+    pub kind: PermissionInstruction,
+    pub permission: u32,
+    pub role: u32,
 }
 
-impl Serdes for SetValue {}
+impl Serdes for UpdatePermission {}

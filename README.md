@@ -1,3 +1,3 @@
-# solana-hamt
+# solana-permissions
 
-A Solana contract and Node script to store searchable data on Solana.
+A Solana contract and Node script to store and update permissions data on Solana.

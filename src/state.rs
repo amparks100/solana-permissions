@@ -1,12 +1,6 @@
 use solana_program::{
     program_pack::{IsInitialized, Sealed},
-    pubkey::Pubkey,
-    hash::Hash,
 };
-
-
-pub const BIT_DEPTH: usize = 4;
-pub const NODE_SIZE: usize = 2_usize.pow(BIT_DEPTH as u32);
 
 use crate::{util::Serdes};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -15,51 +9,70 @@ use borsh::{BorshDeserialize, BorshSerialize};
  * State for main program node
  */
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub struct HAMTState {
+pub struct PermissionState {
     pub is_initialized: bool,
-    pub root_pubkey: Pubkey,
+    pub permissions: u32,
+    pub role: u32,
 }
 
-impl Sealed for HAMTState {}
-impl Serdes for HAMTState {}
+impl Sealed for PermissionState {}
+impl Serdes for PermissionState {}
 
-impl IsInitialized for HAMTState {
+impl IsInitialized for PermissionState {
     fn is_initialized(&self) -> bool {
         self.is_initialized
     }
 }
 
-/**
- * State for tree nodes
- */
-#[derive(Clone, Copy, Default, BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub struct HAMTSlot {
-    pub value: u64,
-    pub key_hash: Hash,
-    pub link: Pubkey,
-}
+// enum Permission {
+// 	/**
+// 	 * @dev 0x0 NONE reserved for no permissions
+// 	 */
+// 	NONE,
+// 	/**
+// 	 * @dev 0x1 Sign a DSNP Announcement
+// 	 */
+// 	ANNOUNCE,
+// 	/**
+// 	 * @dev 0x2 Add new delegate
+// 	 */
+// 	OWNERSHIP_TRANSFER,
+// 	/**
+// 	 * @dev 0x3 Add new delegates
+// 	 */
+// 	DELEGATE_ADD,
+// 	/**
+// 	 * @dev 0x4 Remove delegates
+// 	 */
+// 	DELEGATE_REMOVE
+// }
+// pub enum Permission {
+//     None = 0x0,
+//     Announce = 0x1,
+//     OwnershipTransfer = 0x2,
+//     DelegateAdd = 0x3,
+//     DelegateRemove = 0x4,
+// }
 
-impl HAMTSlot {
-    pub fn is_empty(&self) -> bool {
-        self.key_hash == Hash::default() && self.link == Pubkey::default()
-    }
+// enum Role {
+// 	/**
+// 	 * @dev 0x0 NONE reserved for no permissions
+// 	 */
+// 	NONE,
+// 	/**
+// 	 * @dev 0x1 OWNER:
+// 	 *      - Permission.*
+// 	 */
+// 	OWNER,
+// 	/**
+// 	 * @dev 0x2 ANNOUNCER:
+// 	 *      - Permission.ANNOUNCE
+// 	 */
+// 	ANNOUNCER
+// }
 
-    pub fn is_value(&self) -> bool {
-        self.key_hash != Hash::default()
-    }
-
-    pub fn is_link(&self) -> bool {
-        self.link != Pubkey::default()
-    }
-}
-
-impl Sealed for HAMTSlot {}
-impl Serdes for HAMTSlot {}
-
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
-pub struct HAMTNode {
-    pub values: [HAMTSlot; NODE_SIZE],
-}
-
-impl Sealed for HAMTNode {}
-impl Serdes for HAMTNode {}
+// pub enum Role {
+//     None = 0x0,
+//     Owner = 0x1,
+//     Announcer = 0x2,
+// }
