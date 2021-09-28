@@ -1,9 +1,19 @@
 use solana_program::{
     program_pack::{IsInitialized, Sealed},
+    pubkey::Pubkey,
 };
 
 use crate::{util::Serdes};
 use borsh::{BorshDeserialize, BorshSerialize};
+
+#[derive(Clone, Copy, Default, BorshSerialize, BorshDeserialize, PartialEq, Debug)]
+pub struct Role {
+    pub key: Pubkey,
+    pub role: u8,
+}
+
+impl Sealed for Role {}
+impl Serdes for Role {}
 
 /**
  * State for main program node
@@ -11,8 +21,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
 pub struct PermissionState {
     pub is_initialized: bool,
-    pub permissions: u32,
-    pub role: u32,
+    pub roles: [Role; 8],
 }
 
 impl Sealed for PermissionState {}

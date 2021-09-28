@@ -11,9 +11,12 @@ use solana_program::{
 use crate::{
     error::PermissionError,
     instruction::{ UpdatePermission },
-    util::{Serdes, does_role_have_permission},
+    util::{Serdes, does_role_have_permission, PERMISSION_DELEGATEADD, ROLE_OWNER},
     state::{ PermissionState }
 };
+
+use std::mem;
+
 
 pub struct Processor;
 impl Processor {
@@ -30,7 +33,7 @@ impl Processor {
         
         else if instruction_type == 1 {
             let instruction = UpdatePermission::unpack(instruction_data)?;
-            return Self::process_set_value(accounts, instruction.permission, instruction.role, program_id)
+            return Self::process_set_value(accounts, instruction.role, program_id)
         }
 
         Err(PermissionError::InvalidInstruction.into())
@@ -40,6 +43,7 @@ impl Processor {
         accounts: &[AccountInfo],
         _program_id: &Pubkey,
     ) -> ProgramResult {
+        msg!("Entered Init Permission");
         let account_info_iter = &mut accounts.iter();
 
         let signer = next_account_info(account_info_iter)?;
@@ -48,23 +52,22 @@ impl Processor {
         }
         let permission_account = next_account_info(account_info_iter)?;
         let rent = &Rent::from_account_info(next_account_info(account_info_iter)?)?;
-
+        msg!("got accoutns");
         if !rent.is_exempt(permission_account.lamports(), permission_account.data_len()) {
             return Err(PermissionError::NotRentExempt.into());
         }
 
         // initialize permissions
+        msg!("Struct size{}", mem::size_of::<PermissionState>());
         let mut permission_info = PermissionState::unpack(&permission_account.data.borrow())?;
+        msg!("unpacked");
         if permission_info.is_initialized()  {
             return Err(PermissionError::InvalidInstruction.into());
         }
         permission_info.is_initialized = true;
-        permission_info.permissions = 0;
-        permission_info.role = 0;
-
-        if !rent.is_exempt(permission_account.lamports(), permission_account.data_len()) {
-            return Err(PermissionError::NotRentExempt.into());
-        }
+        permission_info.roles[0].key = *signer.key;
+        permission_info.roles[0].role = ROLE_OWNER;
+        msg!("set things");
 
         PermissionState::pack(&permission_info, &mut permission_account.data.borrow_mut());
 
@@ -73,10 +76,10 @@ impl Processor {
 
     fn process_set_value(
         accounts: &[AccountInfo],
-        permission: u32,
-        role: u32,
+        role: u8,
         _program_id: &Pubkey,
     ) -> ProgramResult {
+        msg!("Started set value");
         let account_info_iter = &mut accounts.iter();
 
         let signer = next_account_info(account_info_iter)?;
@@ -86,21 +89,56 @@ impl Processor {
         }
         let permission_account = next_account_info(account_info_iter)?;
         let _rent = &Rent::from_account_info(next_account_info(account_info_iter)?)?;
+        let update_account = next_account_info(account_info_iter)?;
+        msg!("got accoutns");
 
         // State must already be initialized
         let mut permission_info = PermissionState::unpack(&permission_account.data.borrow())?;
         if !permission_info.is_initialized() {
             return Err(PermissionError::InvalidInstruction.into());
         }
+        msg!("unpacked");
 
-        //verify enums are valid
-        if !does_role_have_permission(role, permission){
-            return Err(PermissionError::InvalidPermission);
+        //find index of signer role/ account we are looking for & empty slot
+        let mut signer_index: isize = -1;
+        let mut account_index: isize = -1;
+        let mut empty_index: isize = -1;
+        for i in 0..8 {
+            if permission_info.roles[i].key == *signer.key{
+                signer_index = i as isize;
+            }
+            if permission_info.roles[i].key == *update_account.key{
+                account_index = i as isize;
+            }
+            if permission_info.roles[i].key == Pubkey::default(){
+                empty_index = i as isize;
+            }
         }
 
-        //update permission enums
-        permission_info.permissions = permission;
-        permission_info.role = role;
+        //check signer perm
+        if signer_index < 0 {
+            msg!("Invalid permission");
+            return Err(PermissionError::InvalidPermission.into());
+        }
+        let existing_role = permission_info.roles[signer_index as usize].role;
+        msg!("Got role {}", existing_role);
+        if !does_role_have_permission(existing_role, PERMISSION_DELEGATEADD){
+            msg!("Invalid permission2");
+            return Err(PermissionError::InvalidPermission.into());
+        }
+
+        //update permissions for other accounts
+        if account_index < 0 {
+            if empty_index < 0 {
+                msg!("Permission array full");
+                return Err(PermissionError::PermissionFull.into())
+            }
+            account_index = empty_index;
+            permission_info.roles[account_index as usize].key = *update_account.key;
+        }
+        //update permission
+        permission_info.roles[account_index as usize].role = role;
+        
         PermissionState::pack(&permission_info, &mut permission_account.data.borrow_mut());
         
         Ok(())

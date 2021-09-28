@@ -31,8 +31,7 @@ impl Serdes for InitPermission {}
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
 pub struct UpdatePermission {
     pub kind: PermissionInstruction,
-    pub permission: u32,
-    pub role: u32,
+    pub role: u8,
 }
 
 impl Serdes for UpdatePermission {}

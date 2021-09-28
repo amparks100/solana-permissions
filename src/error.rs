@@ -11,6 +11,8 @@ pub enum PermissionError {
     NotRentExempt,
     #[error("Permission Invalid")]
     InvalidPermission,
+    #[error("Permission Full")]
+    PermissionFull,
 }
 
 impl From<PermissionError> for ProgramError {

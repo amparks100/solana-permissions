@@ -1,4 +1,3 @@
-import * as BufferLayout from "buffer-layout";
 import { serialize, deserialize } from 'borsh';
 import { PublicKey } from '@solana/web3.js';
 
@@ -16,47 +15,40 @@ class Assignable {
 }
 
 /**
- * Set value instruction
+ * Update permission instruction
  */
-const SetValueKind = 1;
-export class SetValueInstruction extends Assignable { }
-const schema = new Map([[SetValueInstruction, { kind: 'struct', fields: [['kind', 'u8'], ['key', 'string'], ['value', 'u64']] }]]);
+const UpdatePermissionKind = 1;
+export class UpdatePermissionInstruction extends Assignable { }
+const updatePermissionSchema = new Map([[UpdatePermissionInstruction, { kind: 'struct', fields: [['kind', 'u8'],['role', 'u8']] }]]);
 
-export const serializeSetValueInstruction = (key, value) => {
-  const kind = SetValueKind;
-  const ix = new SetValueInstruction({ kind, key, value });
-  return serialize(schema, ix);  
+export const serializeUpdatePermissionInstruction = ( role) => {
+  const kind = UpdatePermissionKind;
+  const ix = new UpdatePermissionInstruction({ kind, role });
+  return serialize(updatePermissionSchema, ix);  
 }
 
+export class PermissionRole extends Assignable { toString() {
+  return `key: ${new PublicKey(Buffer.from(this.key)).toBase58()}, role: ${this.role.toString()}`
+} }
+//export class PermissionRole extends Assignable { }
+
+//export const PermissionRoleSchema = new Map([[PermissionRole, {kind: 'struct', fields: [['key',[32]],['role','u8']]}]]);
+
 /**
- * HAMT State
+ * Permission State
  */
-export class HAMTState extends Assignable { }
-export const HAMTStateSchema = new Map([
-  [HAMTState, { kind: 'struct', fields: [['is_initialized', 'u8'], ['root_pubkey', [32]]] }],
+export class PermissionState extends Assignable { }
+export const PermissionStateSchema = new Map([
+  [PermissionState, { kind: 'struct', fields: [['is_initialized', 'u8'], ['roles',[PermissionRole, 8]]] }],
+  [PermissionRole, {kind: 'struct', fields: [['key',[32]],['role','u8']]}],
 ]);
 
-export const HAMTStateSize = 33;
+export const splitBuffer = (b) => {
+  let initialized = b.slice(0, 1);
+  let split = b.slice(1, b.length);
+  return {prefix: initialized, array: split}
+} 
 
-/**
- * HAMT Slot
- */
-export class HAMTSlot extends Assignable { 
-  toString() {
-    return `value: ${this.value.toString()}, hash: ${new PublicKey(Buffer.from(this.key_hash)).toBase58()}, link: ${new PublicKey(Buffer.from(this.link)).toBase58()}`
-  }
-}
 
-/**
- * HAMT Node
- */
-export class HAMTNode extends Assignable { }
-export const HAMTNodeSchema = new Map([
-  [HAMTSlot, { kind: 'struct', fields: [['value', 'u64'], ['key_hash', [32]], ['link', [32]]] }],
-  [HAMTNode, { kind: 'struct', fields: [['values', [HAMTSlot, 16]]] }]
-]);
-
-export const HAMTNodeSize = 16*(8+32+32);
-
-const jsArrayPrefix = new Uint8Array([16,0,0,0])
-export const deserializeHAMTNode = (b) => deserialize(HAMTNodeSchema, HAMTNode, Buffer.concat([jsArrayPrefix, b]))
+const jsArrayPrefix = new Uint8Array([8,0,0,0])
+export const deserializePermission = (i, b) => deserialize(PermissionStateSchema, PermissionState, Buffer.concat([i, jsArrayPrefix, b]))
