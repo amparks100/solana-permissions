@@ -3,8 +3,8 @@ use borsh::{BorshDeserialize, BorshSerialize};
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
 pub enum PermissionInstruction {
-    InitHAMT,
-    SetValue,
+    InitPermission,
+    UpdatePermission,
 }
 impl Serdes for PermissionInstruction {}
 

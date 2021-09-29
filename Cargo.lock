@@ -679,16 +679,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-hamt"
-version = "0.1.0"
-dependencies = [
- "arrayref",
- "borsh",
- "solana-program",
- "thiserror",
-]
-
-[[package]]
 name = "solana-logger"
 version = "1.7.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -697,6 +687,16 @@ dependencies = [
  "env_logger",
  "lazy_static",
  "log",
+]
+
+[[package]]
+name = "solana-permissions"
+version = "0.1.0"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "solana-program",
+ "thiserror",
 ]
 
 [[package]]

@@ -5,7 +5,7 @@ import { Command } from "commander";
 import { base58_to_binary } from 'base58-js';
 
 const signerAccount = new Account(new Uint8Array([64,26,82,89,7,207,32,204,43,235,63,151,123,16,233,79,100,116,87,112,223,34,117,14,87,189,199,51,187,200,57,83,229,235,248,218,204,175,70,229,70,166,99,88,218,103,183,188,103,198,119,82,180,62,43,126,179,239,125,84,136,36,196,109]));
-const programID = new PublicKey("FUCdr1YJouPsXEET44N8L3YQtZ2fYBxR16K7ENkWFdTH");
+const programID = new PublicKey("qjgAhozPQPKqDyKFZTf1fKJeR4o5aHEp9qfFx1CtHAP");
 const connection = new Connection("http://localhost:8899", 'singleGossip');
 
 const size = (33*8)+1;
@@ -110,73 +110,6 @@ const getPermissions = async (address, accountKey) => {
     }
   }
 }
-
-// /**
-//  * Internal functions
-//  */
-// const _setValue = async (hamt, key, value) => {
-//   const result = await lookup(connection, hamt, key);
-
-//   const baseKeys = [
-//     { pubkey: signerAccount.publicKey, isSigner: true, isWritable: false },
-//     { pubkey: hamt, isSigner: false, isWritable: false },
-//     { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false},
-//   ]
-
-//   const nodeKeys = result.path.map(pubkey => ({ pubkey: pubkey, isSigner: false, isWritable: false }))
-//   nodeKeys[nodeKeys.length - 1].isWritable = true
-
-//   const nodeRent = await connection.getMinimumBalanceForRentExemption(HAMTNodeSize, 'singleGossip');
-//   const collisionAccounts = Array(result.collisions).fill().map(()=>new Account());
-//   const collisionInstructions = collisionAccounts.map((acc)=>SystemProgram.createAccount({
-//     space: HAMTNodeSize,
-//     lamports: nodeRent,
-//     fromPubkey: signerAccount.publicKey,
-//     newAccountPubkey: acc.publicKey,
-//     programId: programID
-//   }));
-//   const collisionKeys = collisionAccounts.map(acc=>({ pubkey: acc.publicKey, isSigner: false, isWritable: true }))
-
-//   result.rent = nodeRent * result.collisions;
-//   result.collisionAccounts = collisionAccounts;
-
-//   const valueBN = BigInt(value)
-//   const setIx = new TransactionInstruction({
-//     programId: programID,
-//     keys: [...baseKeys, ...nodeKeys, ...collisionKeys],
-//     data: serializeSetValueInstruction(key, valueBN),
-//   })
-
-//   const tx = new Transaction().add(...collisionInstructions, setIx);
-//   result.txSignature = await connection.sendTransaction(
-//       tx, 
-//       [signerAccount, ...collisionAccounts], 
-//       {skipPreflight: false, preflightCommitment: 'singleGossip'});
-//   return result
-// }
-
-// const _setValueForBench = async (hamt, key, value) => {
-//   const computeRegexp = /consumed (\d+) of \d+ compute units/
-//   try {
-//     const start = Date.now();
-//     const result =  await _setValue(hamt, key, value)
-//     const confirm = await connection.confirmTransaction(result.txSignature)
-//     result.millis = Date.now() - start;
-
-//     if (confirm.value.err) throw err
-
-//     const txData = await connection.getTransaction(result.txSignature, {commitment: 'confirmed'})
-//     result.fee =  txData.meta.fee
-//     result.compute = parseInt(txData.meta.logMessages
-//       .filter(l=>l.match(computeRegexp))[0]
-//       .match(computeRegexp)[1])
-    
-//     return result
-//   } catch (error) {
-//     console.log(`Error setting ${key}`)
-//     return { error, key, value }
-//   }
-// }
 
 /**
  * Command CLI

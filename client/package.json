@@ -1,7 +1,7 @@
 {
-  "name": "solana-hamt",
+  "name": "solana-permissions",
   "version": "1.0.0",
-  "description": "an implementation of an escrow on solana using [this guide](https://paulx.dev/2021/01/14/programming-on-solana-an-introduction)",
+  "description": "an implementation of setting/changing permissions for accounts in solana",
   "main": "index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
