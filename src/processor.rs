@@ -5,6 +5,9 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     sysvar::{rent::Rent, Sysvar},
+    system_instruction::create_account,
+    instruction::Instruction,
+    program::invoke,
     msg,
 };
 
@@ -41,7 +44,7 @@ impl Processor {
 
     fn process_init_permission(
         accounts: &[AccountInfo],
-        _program_id: &Pubkey,
+        program_id: &Pubkey,
     ) -> ProgramResult {
         msg!("Entered Init Permission");
         let account_info_iter = &mut accounts.iter();
@@ -51,11 +54,44 @@ impl Processor {
             return Err(ProgramError::MissingRequiredSignature);
         }
         let permission_account = next_account_info(account_info_iter)?;
+        //let rent = &rent::Rent::from_account_info(next_account_info(account_info_iter)?)?;
+        //let id = rent::id();
+
+        //let rent = &rent::Rent::from_account_info(rent_account)?;
         let rent = &Rent::from_account_info(next_account_info(account_info_iter)?)?;
         msg!("got accoutns");
         if !rent.is_exempt(permission_account.lamports(), permission_account.data_len()) {
             return Err(PermissionError::NotRentExempt.into());
         }
+       
+
+        //{
+        let new_key = Pubkey::new_unique();
+        let program_id2 = program_id.clone();
+        let signer2 = signer;
+        let mut lamp = 0;
+        let mut data = [];
+        let new_account = AccountInfo::new(
+            &new_key,
+            false,
+            false,
+            &mut lamp,
+            &mut data,
+            &program_id2,
+            false,
+            100
+        );
+        let new_account_ix = create_account(signer.key, &new_key, 0, 0, &program_id2);
+        //}
+        let accounts = [signer2, &new_account ];
+        
+        //let result = Self::invoke(&new_account_ix,&accounts);
+        //msg!("{} {:?} {}", program_id, signer, new_key);
+    
+        // msg!("{}", result);
+
+        
+    
 
         // initialize permissions
         msg!("Struct size{}", mem::size_of::<PermissionState>());
@@ -142,5 +178,9 @@ impl Processor {
         PermissionState::pack(&permission_info, &mut permission_account.data.borrow_mut());
         
         Ok(())
+    }
+    fn invoke2(instruction: &Instruction, account_infos: &[AccountInfo])  {
+        // invoke_signed(instruction, account_infos, &[])
+        //msg!("{}",instruction);
     }
 }

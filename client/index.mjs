@@ -5,7 +5,7 @@ import { Command } from "commander";
 import { base58_to_binary } from 'base58-js';
 
 const signerAccount = new Account(new Uint8Array([64,26,82,89,7,207,32,204,43,235,63,151,123,16,233,79,100,116,87,112,223,34,117,14,87,189,199,51,187,200,57,83,229,235,248,218,204,175,70,229,70,166,99,88,218,103,183,188,103,198,119,82,180,62,43,126,179,239,125,84,136,36,196,109]));
-const programID = new PublicKey("qjgAhozPQPKqDyKFZTf1fKJeR4o5aHEp9qfFx1CtHAP");
+const programID = new PublicKey("3UoGwdgL4NZBgmvTGoLxugh1TmGRcKvpFjz2aTwYW3wz");
 const connection = new Connection("http://localhost:8899", 'singleGossip');
 
 const size = (33*8)+1;
